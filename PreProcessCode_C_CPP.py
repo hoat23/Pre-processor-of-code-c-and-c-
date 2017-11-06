@@ -20,15 +20,39 @@ file2output 	= ""
 #------------------------------------------------------------------------------------
 # Functions
 #------------------------------------------------------------------------------------
-
+def deleteParentheses(lineTxt):
+	listTxt 		= lineTxt.split()
+	firstCharacter 	= listTxt[0][0]
+	lastCharacter 	= listTxt[len(listTxt)-1][ len(listTxt[len(listTxt) - 1])-1]
+	
+	if firstCharacter=="(" and lastCharacter==")":
+		listTxt[0] 				= listTxt[0][1:]
+		listTxt[len(listTxt)-1] = listTxt[len(listTxt)-1][:len(listTxt[len(listTxt)-1]) - 1] 
+	#print("firstElement : "+str(listTxt[0]))
+	#print("lastElemente : "+str(listTxt[len(listTxt)-1]))
+	newLineTxt = " ".join(listTxt)	
+	return newLineTxt
+#------------------------------------------------------------------------------------
+def deleteCommit(lineTxt):
+	ind_comentario = getIndex(lineTxt,"//")
+	if ind_comentario>-1:
+		return lineTxt[:ind_comentario]
+	else:
+		return lineTxt
 #------------------------------------------------------------------------------------
 def getDefine(lineTxt):
-	listTxt = lineTxt.split()
-	ind_comentario_01 = getIndex(listTxt[1],"//")
-	if ind_comentario_01>=0 :
-		return listTxt[1][:ind_comentario_01]
+	listTxt = deleteCommit(lineTxt).split()
+	m=0
+	listDefine=[]
+	if(len(listTxt)>2):
+		for n in range(0,len(listTxt)):
+			if(listTxt[n]=="defined") and ( n+1<len(listTxt) ):
+				n=n+1
+				listDefine.append(deleteParentheses(listTxt[n]))
 	else:
-		return listTxt[1]
+		listDefine.append( deleteParentheses(listTxt[1]) )
+	#print("listDefine : "+str(len(listDefine)))
+	return listDefine[0]
 #------------------------------------------------------------------------------------
 def getIndex(cadena,subCad):
 	try:
@@ -69,7 +93,7 @@ def processDefine(lineTxt,writeON):
 	global end_file
 
 	nameDefine = getDefine(lineTxt)
-	print("Procesador de define ["+nameDefine+"]")
+	print("Process... ["+nameDefine+"]")
 	flagDefine = defineIsON(nameDefine)
 	flagElse   = False
 	flagWrite  = False
@@ -86,7 +110,7 @@ def processDefine(lineTxt,writeON):
 			flagElse = True
 		if thereIs(lineTxt,"#endif"):
 			break
-		if thereIs(lineTxt,"#ifdef"):
+		if thereIs(lineTxt,"#if"):
 			processDefine(lineTxt,flagWrite and writeON)
 		else:
 			if flagWrite and writeON:
@@ -101,7 +125,7 @@ def converter_code(nameSourceCode):
 	if path.exists(nameSourceCode):
 		lineTxt = ini_file.readline()
 		while lineTxt != "":
-			if thereIs(lineTxt,"#ifdef"):
+			if thereIs(lineTxt,"#if"):
 				processDefine(lineTxt,True)
 			else:
 				end_file.write(lineTxt)
